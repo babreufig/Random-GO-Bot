@@ -79,8 +79,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		clearChannel(s, m.ChannelID, 100)
 	}
 
-	//data, _ := json.Marshal(config)
-	//fmt.Printf(string(data))
 }
 
 func voiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
