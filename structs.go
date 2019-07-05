@@ -23,14 +23,15 @@ type GuildConfig struct {
 	MusicBotID               string      `json:"musicBotID"`
 	BotChannelID             string      `json:"botChannelID"`
 	GameRoles                []*Gamerole `json:"gameRoles"`
+	MemeFriendlyChannels     []string    `json:"memeFriendlyChannels"`
 	ControlMessageID         string
 	lastUsedExpensiveCommand time.Time
 }
 
-//Gamerole ..
+//Gamerole holds data regarding a Gamerole
 type Gamerole struct {
-	Emoji  string `json:"emoji"`
-	RoleID string `json:"roleID"`
+	EmojiName string `json:"emoji"`
+	RoleID    string `json:"roleID"`
 }
 
 func (conf *Config) populateFromReader(reader io.Reader) error {

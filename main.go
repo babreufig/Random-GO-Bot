@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
@@ -81,11 +82,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		return
 	}
+
 	if isAdmin {
 		if m.Content == "!clear" {
 			clearChannel(s, m.ChannelID, 100)
 			return
 		}
+	}
+
+	if rand.Intn(1000) == 0 {
+		s.ChannelMessageSendTTS(m.ChannelID, "OH YEAH!")
 	}
 
 }
@@ -107,7 +113,7 @@ func voiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
 func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 	if m.MessageID == config.Guilds[m.GuildID].ControlMessageID {
 		for _, role := range config.Guilds[m.GuildID].GameRoles {
-			if m.Emoji.Name == role.Emoji {
+			if m.Emoji.Name == role.EmojiName {
 				s.GuildMemberRoleAdd(m.GuildID, m.UserID, role.RoleID)
 				break
 			}
@@ -118,7 +124,7 @@ func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 func messageReactionRemove(s *discordgo.Session, m *discordgo.MessageReactionRemove) {
 	if m.MessageID == config.Guilds[m.GuildID].ControlMessageID {
 		for _, role := range config.Guilds[m.GuildID].GameRoles {
-			if m.Emoji.Name == role.Emoji {
+			if m.Emoji.Name == role.EmojiName {
 				s.GuildMemberRoleRemove(m.GuildID, m.UserID, role.RoleID)
 				break
 			}
@@ -128,16 +134,23 @@ func messageReactionRemove(s *discordgo.Session, m *discordgo.MessageReactionRem
 
 func ready(s *discordgo.Session, m *discordgo.Ready) {
 	for guild, conf := range config.Guilds {
-		clearChannel(s, conf.BotChannelID, 10)
-		message, err := s.ChannelMessageSendEmbed(conf.BotChannelID, config.GameRoleEmbed)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		config.Guilds[guild].ControlMessageID = message.ID
 
-		for _, role := range config.Guilds[guild].GameRoles {
-			s.MessageReactionAdd(conf.BotChannelID, message.ID, role.Emoji)
+		_, err := s.State.Guild(guild)
+		if err == nil {
+
+			clearChannel(s, conf.BotChannelID, 10)
+			message, err := s.ChannelMessageSendEmbed(conf.BotChannelID, config.GameRoleEmbed)
+			if err != nil {
+				fmt.Println(err)
+			}
+			config.Guilds[guild].ControlMessageID = message.ID
+
+			for _, role := range config.Guilds[guild].GameRoles {
+				err := s.MessageReactionAdd(conf.BotChannelID, message.ID, role.EmojiName)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
 		}
 	}
 }
