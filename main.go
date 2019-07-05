@@ -138,7 +138,6 @@ func ready(s *discordgo.Session, m *discordgo.Ready) {
 
 		for _, role := range config.Guilds[guild].GameRoles {
 			s.MessageReactionAdd(conf.BotChannelID, message.ID, role.Emoji)
-			fmt.Println(role.Emoji)
 		}
 	}
 }
