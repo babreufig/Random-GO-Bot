@@ -18,13 +18,19 @@ type Config struct {
 
 //GuildConfig Holds Guild specific configuration
 type GuildConfig struct {
-	TalkRoleID               string            `json:"talkRoleID"`
-	TalkChannelID            string            `json:"talkChannelID"`
-	MusicBotID               string            `json:"musicBotID"`
-	BotChannelID             string            `json:"botChannelID"`
-	GameRoleEmojis           map[string]string `json:"gameroleIDs"`
+	TalkRoleID               string      `json:"talkRoleID"`
+	TalkChannelID            string      `json:"talkChannelID"`
+	MusicBotID               string      `json:"musicBotID"`
+	BotChannelID             string      `json:"botChannelID"`
+	GameRoles                []*Gamerole `json:"gameRoles"`
 	ControlMessageID         string
 	lastUsedExpensiveCommand time.Time
+}
+
+//Gamerole ..
+type Gamerole struct {
+	Emoji  string `json:"emoji"`
+	RoleID string `json:"roleID"`
 }
 
 func (conf *Config) populateFromReader(reader io.Reader) error {

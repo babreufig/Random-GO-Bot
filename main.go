@@ -57,8 +57,17 @@ func main() {
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-
 	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	dm, _ := comesFromDM(s, m)
+	if dm {
+		return
+	}
+
+	isAdmin, err := memberHasPermission(s, m.GuildID, m.Message.Author.ID, 8)
+	if err != nil {
 		return
 	}
 
@@ -66,17 +75,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.ChannelID == config.Guilds[m.GuildID].TalkChannelID {
 			ID, err := createNewWTRoom()
 			if err != nil {
-				s.ChannelMessageSend(m.ChannelID, "Fehler: "+err.Error())
+				s.ChannelMessageSend(m.ChannelID, "Error: "+err.Error())
 			}
 			s.ChannelMessageSend(m.ChannelID, "https://www.watch2gether.com/rooms/"+ID)
 		}
+		return
 	}
-
-	if m.Content == "t" {
-		s.ChannelMessageSendEmbed(m.ChannelID, config.GameRoleEmbed)
-	}
-	if m.Content == "!clear" {
-		clearChannel(s, m.ChannelID, 100)
+	if isAdmin {
+		if m.Content == "!clear" {
+			clearChannel(s, m.ChannelID, 100)
+			return
+		}
 	}
 
 }
@@ -97,9 +106,9 @@ func voiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
 
 func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 	if m.MessageID == config.Guilds[m.GuildID].ControlMessageID {
-		for roleID, emojiName := range config.Guilds[m.GuildID].GameRoleEmojis {
-			if m.Emoji.Name == emojiName {
-				s.GuildMemberRoleAdd(m.GuildID, m.UserID, roleID)
+		for _, role := range config.Guilds[m.GuildID].GameRoles {
+			if m.Emoji.Name == role.Emoji {
+				s.GuildMemberRoleAdd(m.GuildID, m.UserID, role.RoleID)
 				break
 			}
 		}
@@ -108,9 +117,9 @@ func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 
 func messageReactionRemove(s *discordgo.Session, m *discordgo.MessageReactionRemove) {
 	if m.MessageID == config.Guilds[m.GuildID].ControlMessageID {
-		for roleID, emojiName := range config.Guilds[m.GuildID].GameRoleEmojis {
-			if m.Emoji.Name == emojiName {
-				s.GuildMemberRoleRemove(m.GuildID, m.UserID, roleID)
+		for _, role := range config.Guilds[m.GuildID].GameRoles {
+			if m.Emoji.Name == role.Emoji {
+				s.GuildMemberRoleRemove(m.GuildID, m.UserID, role.RoleID)
 				break
 			}
 		}
@@ -127,10 +136,9 @@ func ready(s *discordgo.Session, m *discordgo.Ready) {
 		}
 		config.Guilds[guild].ControlMessageID = message.ID
 
-		for _, emojiName := range config.Guilds[guild].GameRoleEmojis {
-			s.MessageReactionAdd(conf.BotChannelID, message.ID, emojiName)
+		for _, role := range config.Guilds[guild].GameRoles {
+			s.MessageReactionAdd(conf.BotChannelID, message.ID, role.Emoji)
+			fmt.Println(role.Emoji)
 		}
-
 	}
-
 }

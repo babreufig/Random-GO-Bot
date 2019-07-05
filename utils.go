@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -29,7 +27,7 @@ func clearChannel(s *discordgo.Session, channelID string, num int) error {
 
 	err := s.ChannelMessagesBulkDelete(channelID, messageIDs)
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	return nil
 }
