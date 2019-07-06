@@ -89,9 +89,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 	}
-
-	if rand.Intn(1000) == 0 {
-		s.ChannelMessageSendTTS(m.ChannelID, "OH YEAH!")
+	if isMemeFriendly(m.GuildID, m.ChannelID) {
+		if rand.Intn(1000) == 0 {
+			s.ChannelMessageSendTTS(m.ChannelID, "OH YEAH!")
+		}
 	}
 
 }
@@ -111,10 +112,16 @@ func voiceStateUpdate(s *discordgo.Session, m *discordgo.VoiceStateUpdate) {
 }
 
 func messageReactionAdd(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
+	if m.UserID == s.State.User.ID {
+		return
+	}
 	if m.MessageID == config.Guilds[m.GuildID].ControlMessageID {
 		for _, role := range config.Guilds[m.GuildID].GameRoles {
 			if m.Emoji.Name == role.EmojiName {
-				s.GuildMemberRoleAdd(m.GuildID, m.UserID, role.RoleID)
+				err := s.GuildMemberRoleAdd(m.GuildID, m.UserID, role.RoleID)
+				if err != nil {
+					fmt.Println("messageReactionAdd", err)
+				}
 				break
 			}
 		}

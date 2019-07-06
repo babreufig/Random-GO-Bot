@@ -52,3 +52,12 @@ func memberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 
 	return false, nil
 }
+
+func isMemeFriendly(guildID string, channelID string) bool {
+	for _, i := range config.Guilds[guildID].MemeFriendlyChannels {
+		if i == channelID {
+			return true
+		}
+	}
+	return false
+}
